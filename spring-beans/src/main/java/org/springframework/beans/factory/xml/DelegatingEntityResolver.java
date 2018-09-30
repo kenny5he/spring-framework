@@ -16,14 +16,13 @@
 
 package org.springframework.beans.factory.xml;
 
-import java.io.IOException;
-
+import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-import org.springframework.lang.Nullable;
-import org.springframework.util.Assert;
+import java.io.IOException;
 
 /**
  * {@link EntityResolver} implementation that delegates to a {@link BeansDtdResolver}
@@ -44,11 +43,9 @@ public class DelegatingEntityResolver implements EntityResolver {
 	/** Suffix for schema definition files. */
 	public static final String XSD_SUFFIX = ".xsd";
 
-
 	private final EntityResolver dtdResolver;
 
 	private final EntityResolver schemaResolver;
-
 
 	/**
 	 * Create a new DelegatingEntityResolver that delegates to
@@ -76,17 +73,17 @@ public class DelegatingEntityResolver implements EntityResolver {
 		this.schemaResolver = schemaResolver;
 	}
 
-
 	@Override
 	@Nullable
 	public InputSource resolveEntity(@Nullable String publicId, @Nullable String systemId)
 			throws SAXException, IOException {
 
 		if (systemId != null) {
+		    // DTD 模式
 			if (systemId.endsWith(DTD_SUFFIX)) {
 				return this.dtdResolver.resolveEntity(publicId, systemId);
-			}
-			else if (systemId.endsWith(XSD_SUFFIX)) {
+            // XSD 模式
+			} else if (systemId.endsWith(XSD_SUFFIX)) {
 				return this.schemaResolver.resolveEntity(publicId, systemId);
 			}
 		}
@@ -94,7 +91,6 @@ public class DelegatingEntityResolver implements EntityResolver {
 		// Fall back to the parser's default behavior.
 		return null;
 	}
-
 
 	@Override
 	public String toString() {

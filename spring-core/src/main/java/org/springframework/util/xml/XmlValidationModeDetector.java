@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2019 the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      https://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,21 +16,16 @@
 
 package org.springframework.util.xml;
 
-import java.io.BufferedReader;
-import java.io.CharConversionException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-
 import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
+
+import java.io.*;
 
 /**
  * Detects whether an XML stream is using DTD- or XSD-based validation.
  *
  * @author Rob Harrop
  * @author Juergen Hoeller
- * @author Sam Brannen
  * @since 2.0
  */
 public class XmlValidationModeDetector {
@@ -73,12 +68,10 @@ public class XmlValidationModeDetector {
 	 */
 	private static final String END_COMMENT = "-->";
 
-
 	/**
 	 * Indicates whether or not the current parse position is inside an XML comment.
 	 */
 	private boolean inComment;
-
 
 	/**
 	 * Detect the validation mode for the XML document in the supplied {@link InputStream}.
@@ -92,30 +85,35 @@ public class XmlValidationModeDetector {
 		// Peek into the file to look for DOCTYPE.
 		BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
 		try {
+		    // 是否为 DTD 校验模式。默认为，非 DTD 模式，即 XSD 模式
 			boolean isDtdValidated = false;
 			String content;
+			// 循环，逐行读取 XML 文件的内容
 			while ((content = reader.readLine()) != null) {
 				content = consumeCommentTokens(content);
+				// 跳过，如果是注释，或者
 				if (this.inComment || !StringUtils.hasText(content)) {
 					continue;
 				}
+                // 包含 DOCTYPE 为 DTD 模式
 				if (hasDoctype(content)) {
 					isDtdValidated = true;
 					break;
 				}
+                // hasOpeningTag 方法会校验，如果这一行有 < ，并且 < 后面跟着的是字母，则返回 true 。
 				if (hasOpeningTag(content)) {
 					// End of meaningful data...
 					break;
 				}
 			}
+			// 返回 VALIDATION_DTD or VALIDATION_XSD 模式
 			return (isDtdValidated ? VALIDATION_DTD : VALIDATION_XSD);
-		}
-		catch (CharConversionException ex) {
+		} catch (CharConversionException ex) {
+		    // 返回 VALIDATION_AUTO 模式
 			// Choked on some character encoding...
 			// Leave the decision up to the caller.
 			return VALIDATION_AUTO;
-		}
-		finally {
+		} finally {
 			reader.close();
 		}
 	}
@@ -138,32 +136,27 @@ public class XmlValidationModeDetector {
 			return false;
 		}
 		int openTagIndex = content.indexOf('<');
-		return (openTagIndex > -1 && (content.length() > openTagIndex + 1) &&
-				Character.isLetter(content.charAt(openTagIndex + 1)));
+		return (openTagIndex > -1 // < 存在
+                && (content.length() > openTagIndex + 1) // < 后面还有内容
+                && Character.isLetter(content.charAt(openTagIndex + 1))); // < 后面的内容是字幕
 	}
 
 	/**
-	 * Consume all leading and trailing comments in the given String and return
-	 * the remaining content, which may be empty since the supplied content might
-	 * be all comment data.
+	 * Consumes all the leading comment data in the given String and returns the remaining content, which
+	 * may be empty since the supplied content might be all comment data. For our purposes it is only important
+	 * to strip leading comment content on a line since the first piece of non comment content will be either
+	 * the DOCTYPE declaration or the root element of the document.
 	 */
 	@Nullable
 	private String consumeCommentTokens(String line) {
-		int indexOfStartComment = line.indexOf(START_COMMENT);
-		if (indexOfStartComment == -1 && !line.contains(END_COMMENT)) {
+	    // 非注释
+		if (!line.contains(START_COMMENT) && !line.contains(END_COMMENT)) {
 			return line;
 		}
-
-		String result = "";
 		String currLine = line;
-		if (indexOfStartComment >= 0) {
-			result = line.substring(0, indexOfStartComment);
-			currLine = line.substring(indexOfStartComment);
-		}
-
 		while ((currLine = consume(currLine)) != null) {
 			if (!this.inComment && !currLine.trim().startsWith(START_COMMENT)) {
-				return result + currLine;
+				return currLine;
 			}
 		}
 		return null;
