@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2019 the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      https://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,17 +16,16 @@
 
 package org.springframework.context.event;
 
-import java.util.concurrent.Executor;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.core.ResolvableType;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ErrorHandler;
+
+import java.util.concurrent.Executor;
 
 /**
  * Simple implementation of the {@link ApplicationEventMulticaster} interface.
@@ -130,12 +129,14 @@ public class SimpleApplicationEventMulticaster extends AbstractApplicationEventM
 	@Override
 	public void multicastEvent(final ApplicationEvent event, @Nullable ResolvableType eventType) {
 		ResolvableType type = (eventType != null ? eventType : resolveDefaultEventType(event));
-		Executor executor = getTaskExecutor();
-		for (ApplicationListener<?> listener : getApplicationListeners(event, type)) {
+		// 获得对应类型的 ApplicationListener 数组
+		for (final ApplicationListener<?> listener : getApplicationListeners(event, type)) {
+			Executor executor = getTaskExecutor();
+			// 有执行器，使用执行器执行
 			if (executor != null) {
 				executor.execute(() -> invokeListener(listener, event));
-			}
-			else {
+            // 无执行器，直接执行
+			} else {
 				invokeListener(listener, event);
 			}
 		}
@@ -166,7 +167,7 @@ public class SimpleApplicationEventMulticaster extends AbstractApplicationEventM
 		}
 	}
 
-	@SuppressWarnings({"rawtypes", "unchecked"})
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	private void doInvokeListener(ApplicationListener listener, ApplicationEvent event) {
 		try {
 			listener.onApplicationEvent(event);
@@ -177,8 +178,8 @@ public class SimpleApplicationEventMulticaster extends AbstractApplicationEventM
 				// Possibly a lambda-defined listener which we could not resolve the generic event type for
 				// -> let's suppress the exception and just log a debug message.
 				Log logger = LogFactory.getLog(getClass());
-				if (logger.isTraceEnabled()) {
-					logger.trace("Non-matching event type for listener: " + listener, ex);
+				if (logger.isDebugEnabled()) {
+					logger.debug("Non-matching event type for listener: " + listener, ex);
 				}
 			}
 			else {
