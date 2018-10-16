@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2019 the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      https://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -58,8 +58,9 @@ public abstract class AopUtils {
 	 * @see #isCglibProxy
 	 */
 	public static boolean isAopProxy(@Nullable Object object) {
-		return (object instanceof SpringProxy && (Proxy.isProxyClass(object.getClass()) ||
-				object.getClass().getName().contains(ClassUtils.CGLIB_CLASS_SEPARATOR)));
+		return (object instanceof SpringProxy &&
+				(Proxy.isProxyClass(object.getClass()) // JDK Proxy 类
+                        || ClassUtils.isCglibProxyClass(object.getClass()))); // CGLIB Proxy 类
 	}
 
 	/**
@@ -83,8 +84,7 @@ public abstract class AopUtils {
 	 * @see ClassUtils#isCglibProxy(Object)
 	 */
 	public static boolean isCglibProxy(@Nullable Object object) {
-		return (object instanceof SpringProxy &&
-				object.getClass().getName().contains(ClassUtils.CGLIB_CLASS_SEPARATOR));
+		return (object instanceof SpringProxy && ClassUtils.isCglibProxy(object));
 	}
 
 	/**

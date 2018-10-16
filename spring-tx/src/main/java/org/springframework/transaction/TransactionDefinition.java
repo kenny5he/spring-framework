@@ -19,6 +19,8 @@ package org.springframework.transaction;
 import org.springframework.lang.Nullable;
 
 /**
+ * 事务定义接口
+ *
  * Interface that defines Spring-compliant transaction properties.
  * Based on the propagation behavior definitions analogous to EJB CMT attributes.
  *
