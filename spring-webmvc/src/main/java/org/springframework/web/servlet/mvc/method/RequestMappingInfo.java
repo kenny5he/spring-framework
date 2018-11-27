@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2020 the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      https://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,29 +16,21 @@
 
 package org.springframework.web.servlet.mvc.method;
 
-import java.util.List;
-import java.util.Set;
-
-import javax.servlet.http.HttpServletRequest;
-
 import org.springframework.http.HttpMethod;
 import org.springframework.lang.Nullable;
 import org.springframework.util.PathMatcher;
 import org.springframework.util.StringUtils;
 import org.springframework.web.accept.ContentNegotiationManager;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.servlet.mvc.condition.ConsumesRequestCondition;
-import org.springframework.web.servlet.mvc.condition.HeadersRequestCondition;
-import org.springframework.web.servlet.mvc.condition.ParamsRequestCondition;
-import org.springframework.web.servlet.mvc.condition.PatternsRequestCondition;
-import org.springframework.web.servlet.mvc.condition.ProducesRequestCondition;
-import org.springframework.web.servlet.mvc.condition.RequestCondition;
-import org.springframework.web.servlet.mvc.condition.RequestConditionHolder;
-import org.springframework.web.servlet.mvc.condition.RequestMethodsRequestCondition;
-import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
+import org.springframework.web.servlet.mvc.condition.*;
 import org.springframework.web.util.UrlPathHelper;
 
+import javax.servlet.http.HttpServletRequest;
+import java.util.List;
+
 /**
+ *
+ *
  * Request mapping information. Encapsulates the following request mapping conditions:
  * <ol>
  * <li>{@link PatternsRequestCondition}
@@ -56,23 +48,46 @@ import org.springframework.web.util.UrlPathHelper;
  */
 public final class RequestMappingInfo implements RequestCondition<RequestMappingInfo> {
 
+    /**
+     * 名字
+     */
 	@Nullable
 	private final String name;
 
+    /**
+     * 请求路径的条件
+     */
 	private final PatternsRequestCondition patternsCondition;
 
+    /**
+     * 请求方法的条件
+     */
 	private final RequestMethodsRequestCondition methodsCondition;
 
+    /**
+     * 参数的条件
+     */
 	private final ParamsRequestCondition paramsCondition;
 
+    /**
+     * 请求头的条件
+     */
 	private final HeadersRequestCondition headersCondition;
 
+    /**
+     * 可消费的 Content-Type 的条件
+     */
 	private final ConsumesRequestCondition consumesCondition;
 
+    /**
+     * 可生产的 Content-Type 的条件
+     */
 	private final ProducesRequestCondition producesCondition;
 
+    /**
+     * 自定义的条件
+     */
 	private final RequestConditionHolder customConditionHolder;
-
 
 	public RequestMappingInfo(@Nullable String name, @Nullable PatternsRequestCondition patterns,
 			@Nullable RequestMethodsRequestCondition methods, @Nullable ParamsRequestCondition params,
@@ -215,38 +230,35 @@ public final class RequestMappingInfo implements RequestCondition<RequestMapping
 	 * the current request, sorted with best matching patterns on top.
 	 * @return a new instance in case all conditions match; or {@code null} otherwise
 	 */
-	@Override
+	@SuppressWarnings("Duplicates")
+    @Override
 	@Nullable
 	public RequestMappingInfo getMatchingCondition(HttpServletRequest request) {
+	    // 匹配 methodsCondition、paramsCondition、headersCondition、consumesCondition、producesCondition
 		RequestMethodsRequestCondition methods = this.methodsCondition.getMatchingCondition(request);
-		if (methods == null) {
-			return null;
-		}
 		ParamsRequestCondition params = this.paramsCondition.getMatchingCondition(request);
-		if (params == null) {
-			return null;
-		}
 		HeadersRequestCondition headers = this.headersCondition.getMatchingCondition(request);
-		if (headers == null) {
-			return null;
-		}
 		ConsumesRequestCondition consumes = this.consumesCondition.getMatchingCondition(request);
-		if (consumes == null) {
-			return null;
-		}
 		ProducesRequestCondition produces = this.producesCondition.getMatchingCondition(request);
-		if (produces == null) {
-			return null;
-		}
-		PatternsRequestCondition patterns = this.patternsCondition.getMatchingCondition(request);
-		if (patterns == null) {
-			return null;
-		}
-		RequestConditionHolder custom = this.customConditionHolder.getMatchingCondition(request);
-		if (custom == null) {
+		// 如果任一为空，则返回 null ，表示匹配失败
+		if (methods == null || params == null || headers == null || consumes == null || produces == null) {
 			return null;
 		}
 
+		// 匹配 patternsCondition
+		PatternsRequestCondition patterns = this.patternsCondition.getMatchingCondition(request);
+		if (patterns == null) { // 如果 patterns 为空，则返回 null ，表示匹配失败
+			return null;
+		}
+
+		// 匹配 customConditionHolder
+		RequestConditionHolder custom = this.customConditionHolder.getMatchingCondition(request);
+		if (custom == null) { // 如果 custom 为空，则返回 null ，表示匹配失败
+			return null;
+		}
+
+		// 创建匹配的 RequestMappingInfo 对象。
+        // 为什么要创建 RequestMappingInfo 对象呢？因为当前 RequestMappingInfo 对象，一个 methodsCondition 可以配置 GET、POST、DELETE 等等条件，但是实际就匹配一个请求类型，此时 methods 只代表其匹配的那个。
 		return new RequestMappingInfo(this.name, patterns,
 				methods, params, headers, consumes, produces, custom.getCondition());
 	}
@@ -261,37 +273,45 @@ public final class RequestMappingInfo implements RequestCondition<RequestMapping
 	public int compareTo(RequestMappingInfo other, HttpServletRequest request) {
 		int result;
 		// Automatic vs explicit HTTP HEAD mapping
+        // 针对 HEAD 请求方法，特殊处理
 		if (HttpMethod.HEAD.matches(request.getMethod())) {
 			result = this.methodsCondition.compareTo(other.getMethodsCondition(), request);
 			if (result != 0) {
 				return result;
 			}
 		}
+		// 比较 patternsCondition
 		result = this.patternsCondition.compareTo(other.getPatternsCondition(), request);
 		if (result != 0) {
 			return result;
 		}
+		// 比较 paramsCondition
 		result = this.paramsCondition.compareTo(other.getParamsCondition(), request);
 		if (result != 0) {
 			return result;
 		}
+		// 比较 headersCondition
 		result = this.headersCondition.compareTo(other.getHeadersCondition(), request);
 		if (result != 0) {
 			return result;
 		}
+		// 比较 consumesCondition
 		result = this.consumesCondition.compareTo(other.getConsumesCondition(), request);
 		if (result != 0) {
 			return result;
 		}
+		// 比较 producesCondition
 		result = this.producesCondition.compareTo(other.getProducesCondition(), request);
 		if (result != 0) {
 			return result;
 		}
 		// Implicit (no method) vs explicit HTTP method mappings
+        // 比较 methodsCondition
 		result = this.methodsCondition.compareTo(other.getMethodsCondition(), request);
 		if (result != 0) {
 			return result;
 		}
+		// 比较 customConditionHolder
 		result = this.customConditionHolder.compareTo(other.customConditionHolder, request);
 		if (result != 0) {
 			return result;
@@ -300,7 +320,7 @@ public final class RequestMappingInfo implements RequestCondition<RequestMapping
 	}
 
 	@Override
-	public boolean equals(@Nullable Object other) {
+	public boolean equals(Object other) {
 		if (this == other) {
 			return true;
 		}
@@ -328,28 +348,24 @@ public final class RequestMappingInfo implements RequestCondition<RequestMapping
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder("{");
+		builder.append(this.patternsCondition);
 		if (!this.methodsCondition.isEmpty()) {
-			Set<RequestMethod> httpMethods = this.methodsCondition.getMethods();
-			builder.append(httpMethods.size() == 1 ? httpMethods.iterator().next() : httpMethods);
-		}
-		if (!this.patternsCondition.isEmpty()) {
-			Set<String> patterns = this.patternsCondition.getPatterns();
-			builder.append(" ").append(patterns.size() == 1 ? patterns.iterator().next() : patterns);
+			builder.append(",methods=").append(this.methodsCondition);
 		}
 		if (!this.paramsCondition.isEmpty()) {
-			builder.append(", params ").append(this.paramsCondition);
+			builder.append(",params=").append(this.paramsCondition);
 		}
 		if (!this.headersCondition.isEmpty()) {
-			builder.append(", headers ").append(this.headersCondition);
+			builder.append(",headers=").append(this.headersCondition);
 		}
 		if (!this.consumesCondition.isEmpty()) {
-			builder.append(", consumes ").append(this.consumesCondition);
+			builder.append(",consumes=").append(this.consumesCondition);
 		}
 		if (!this.producesCondition.isEmpty()) {
-			builder.append(", produces ").append(this.producesCondition);
+			builder.append(",produces=").append(this.producesCondition);
 		}
 		if (!this.customConditionHolder.isEmpty()) {
-			builder.append(", and ").append(this.customConditionHolder);
+			builder.append(",custom=").append(this.customConditionHolder);
 		}
 		builder.append('}');
 		return builder.toString();
@@ -506,7 +522,6 @@ public final class RequestMappingInfo implements RequestCondition<RequestMapping
 		}
 
 		@Override
-		@SuppressWarnings("deprecation")
 		public RequestMappingInfo build() {
 			ContentNegotiationManager manager = this.options.getContentNegotiationManager();
 
@@ -602,22 +617,14 @@ public final class RequestMappingInfo implements RequestCondition<RequestMapping
 		 * Set whether to apply suffix pattern matching in PatternsRequestCondition.
 		 * <p>By default this is set to 'true'.
 		 * @see #setRegisteredSuffixPatternMatch(boolean)
-		 * @deprecated as of 5.2.4. See class-level note in
-		 * {@link RequestMappingHandlerMapping} on the deprecation of path
-		 * extension config options.
 		 */
-		@Deprecated
 		public void setSuffixPatternMatch(boolean suffixPatternMatch) {
 			this.suffixPatternMatch = suffixPatternMatch;
 		}
 
 		/**
 		 * Return whether to apply suffix pattern matching in PatternsRequestCondition.
-		 * @deprecated as of 5.2.4. See class-level note in
-		 * {@link RequestMappingHandlerMapping} on the deprecation of path
-		 * extension config options.
 		 */
-		@Deprecated
 		public boolean useSuffixPatternMatch() {
 			return this.suffixPatternMatch;
 		}
@@ -628,12 +635,7 @@ public final class RequestMappingInfo implements RequestCondition<RequestMapping
 		 * {@code suffixPatternMatch=true} and requires that a
 		 * {@link #setContentNegotiationManager} is also configured in order to
 		 * obtain the registered file extensions.
-		 * @deprecated as of 5.2.4. See class-level note in
-		 * {@link RequestMappingHandlerMapping} on the deprecation of path
-		 * extension config options; note also that in 5.3 the default for this
-		 * property switches from {@code false} to {@code true}.
 		 */
-		@Deprecated
 		public void setRegisteredSuffixPatternMatch(boolean registeredSuffixPatternMatch) {
 			this.registeredSuffixPatternMatch = registeredSuffixPatternMatch;
 			this.suffixPatternMatch = (registeredSuffixPatternMatch || this.suffixPatternMatch);
@@ -642,11 +644,7 @@ public final class RequestMappingInfo implements RequestCondition<RequestMapping
 		/**
 		 * Return whether suffix pattern matching should be restricted to registered
 		 * file extensions only.
-		 * @deprecated as of 5.2.4. See class-level note in
-		 * {@link RequestMappingHandlerMapping} on the deprecation of path
-		 * extension config options.
 		 */
-		@Deprecated
 		public boolean useRegisteredSuffixPatternMatch() {
 			return this.registeredSuffixPatternMatch;
 		}
@@ -655,12 +653,8 @@ public final class RequestMappingInfo implements RequestCondition<RequestMapping
 		 * Return the file extensions to use for suffix pattern matching. If
 		 * {@code registeredSuffixPatternMatch=true}, the extensions are obtained
 		 * from the configured {@code contentNegotiationManager}.
-		 * @deprecated as of 5.2.4. See class-level note in
-		 * {@link RequestMappingHandlerMapping} on the deprecation of path
-		 * extension config options.
 		 */
 		@Nullable
-		@Deprecated
 		public List<String> getFileExtensions() {
 			if (useRegisteredSuffixPatternMatch() && this.contentNegotiationManager != null) {
 				return this.contentNegotiationManager.getAllFileExtensions();

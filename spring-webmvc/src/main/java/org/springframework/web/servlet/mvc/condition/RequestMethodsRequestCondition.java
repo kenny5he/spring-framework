@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2019 the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      https://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,22 +16,15 @@
 
 package org.springframework.web.servlet.mvc.condition;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
-
-import javax.servlet.DispatcherType;
-import javax.servlet.http.HttpServletRequest;
-
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.cors.CorsUtils;
+
+import javax.servlet.DispatcherType;
+import javax.servlet.http.HttpServletRequest;
+import java.util.*;
 
 /**
  * A logical disjunction (' || ') request condition that matches a request
@@ -43,17 +36,12 @@ import org.springframework.web.cors.CorsUtils;
  */
 public final class RequestMethodsRequestCondition extends AbstractRequestCondition<RequestMethodsRequestCondition> {
 
-	/** Per HTTP method cache to return ready instances from getMatchingCondition. */
-	private static final Map<String, RequestMethodsRequestCondition> requestMethodConditionCache;
+	private static final RequestMethodsRequestCondition GET_CONDITION =
+			new RequestMethodsRequestCondition(RequestMethod.GET);
 
-	static {
-		requestMethodConditionCache = new HashMap<>(RequestMethod.values().length);
-		for (RequestMethod method : RequestMethod.values()) {
-			requestMethodConditionCache.put(method.name(), new RequestMethodsRequestCondition(method));
-		}
-	}
-
-
+    /**
+     * RequestMethod 集合
+     */
 	private final Set<RequestMethod> methods;
 
 
@@ -115,15 +103,16 @@ public final class RequestMethodsRequestCondition extends AbstractRequestConditi
 			return matchPreFlight(request);
 		}
 
+		// 空的情况下，就返回自身
 		if (getMethods().isEmpty()) {
 			if (RequestMethod.OPTIONS.name().equals(request.getMethod()) &&
 					!DispatcherType.ERROR.equals(request.getDispatcherType())) {
-
-				return null; // We handle OPTIONS transparently, so don't match if no explicit declarations
+				return null; // No implicit match for OPTIONS (we handle it)
 			}
 			return this;
 		}
 
+		// 非空，逐个匹配
 		return matchRequestMethod(request.getMethod());
 	}
 
@@ -143,18 +132,16 @@ public final class RequestMethodsRequestCondition extends AbstractRequestConditi
 
 	@Nullable
 	private RequestMethodsRequestCondition matchRequestMethod(String httpMethodValue) {
-		RequestMethod requestMethod;
-		try {
-			requestMethod = RequestMethod.valueOf(httpMethodValue);
-			if (getMethods().contains(requestMethod)) {
-				return requestMethodConditionCache.get(httpMethodValue);
+		HttpMethod httpMethod = HttpMethod.resolve(httpMethodValue);
+		if (httpMethod != null) {
+			for (RequestMethod method : getMethods()) {
+				if (httpMethod.matches(method.name())) {
+					return new RequestMethodsRequestCondition(method);
+				}
 			}
-			if (requestMethod.equals(RequestMethod.HEAD) && getMethods().contains(RequestMethod.GET)) {
-				return requestMethodConditionCache.get(HttpMethod.GET.name());
+			if (httpMethod == HttpMethod.HEAD && getMethods().contains(RequestMethod.GET)) {
+				return GET_CONDITION;
 			}
-		}
-		catch (IllegalArgumentException ex) {
-			// Custom request method
 		}
 		return null;
 	}

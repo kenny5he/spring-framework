@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2020 the original author or authors.
+ * Copyright 2002-2018 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      https://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,19 +15,6 @@
  */
 
 package org.springframework.web.servlet.mvc.method;
-
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -45,8 +32,12 @@ import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.handler.AbstractHandlerMethodMapping;
 import org.springframework.web.servlet.mvc.condition.NameValueExpression;
-import org.springframework.web.servlet.mvc.condition.ProducesRequestCondition;
 import org.springframework.web.util.WebUtils;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import java.lang.reflect.Method;
+import java.util.*;
 
 /**
  * Abstract base class for classes for which {@link RequestMappingInfo} defines
@@ -63,21 +54,18 @@ public abstract class RequestMappingInfoHandlerMapping extends AbstractHandlerMe
 	static {
 		try {
 			HTTP_OPTIONS_HANDLE_METHOD = HttpOptionsHandler.class.getMethod("handle");
-		}
-		catch (NoSuchMethodException ex) {
+		} catch (NoSuchMethodException ex) {
 			// Should never happen
 			throw new IllegalStateException("Failed to retrieve internal handler method for HTTP OPTIONS", ex);
 		}
 	}
 
-
 	protected RequestMappingInfoHandlerMapping() {
 		setHandlerMethodMappingNamingStrategy(new RequestMappingInfoHandlerMethodMappingNamingStrategy());
 	}
 
-
 	/**
-	 * Get the URL path patterns associated with the supplied {@link RequestMappingInfo}.
+	 * Get the URL path patterns associated with this {@link RequestMappingInfo}.
 	 */
 	@Override
 	protected Set<String> getMappingPathPatterns(RequestMappingInfo info) {
@@ -103,17 +91,6 @@ public abstract class RequestMappingInfoHandlerMapping extends AbstractHandlerMe
 		return (info1, info2) -> info1.compareTo(info2, request);
 	}
 
-	@Override
-	protected HandlerMethod getHandlerInternal(HttpServletRequest request) throws Exception {
-		request.removeAttribute(PRODUCIBLE_MEDIA_TYPES_ATTRIBUTE);
-		try {
-			return super.getHandlerInternal(request);
-		}
-		finally {
-			ProducesRequestCondition.clearMediaTypesAttribute(request);
-		}
-	}
-
 	/**
 	 * Expose URI template variables, matrix variables, and producible media types in the request.
 	 * @see HandlerMapping#URI_TEMPLATE_VARIABLES_ATTRIBUTE
@@ -124,29 +101,30 @@ public abstract class RequestMappingInfoHandlerMapping extends AbstractHandlerMe
 	protected void handleMatch(RequestMappingInfo info, String lookupPath, HttpServletRequest request) {
 		super.handleMatch(info, lookupPath, request);
 
-		String bestPattern;
-		Map<String, String> uriVariables;
-
+		// 获得 bestPattern 和 uriVariables
+		String bestPattern; // 最佳路径
+		Map<String, String> uriVariables; // 路径上的变量集合
 		Set<String> patterns = info.getPatternsCondition().getPatterns();
 		if (patterns.isEmpty()) {
 			bestPattern = lookupPath;
 			uriVariables = Collections.emptyMap();
-		}
-		else {
+		} else {
 			bestPattern = patterns.iterator().next();
 			uriVariables = getPathMatcher().extractUriTemplateVariables(bestPattern, lookupPath);
 		}
-
 		request.setAttribute(BEST_MATCHING_PATTERN_ATTRIBUTE, bestPattern);
 
+		// 设置 MATRIX_VARIABLES_ATTRIBUTE 属性，到请求中
 		if (isMatrixVariableContentAvailable()) {
 			Map<String, MultiValueMap<String, String>> matrixVars = extractMatrixVariables(request, uriVariables);
 			request.setAttribute(HandlerMapping.MATRIX_VARIABLES_ATTRIBUTE, matrixVars);
 		}
 
+		// 设置 URI_TEMPLATE_VARIABLES_ATTRIBUTE 属性，到请求中
 		Map<String, String> decodedUriVariables = getUrlPathHelper().decodePathVariables(request, uriVariables);
 		request.setAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE, decodedUriVariables);
 
+		// 设置 PRODUCIBLE_MEDIA_TYPES_ATTRIBUTE 属性，到请求中
 		if (!info.getProducesCondition().getProducibleMediaTypes().isEmpty()) {
 			Set<MediaType> mediaTypes = info.getProducesCondition().getProducibleMediaTypes();
 			request.setAttribute(PRODUCIBLE_MEDIA_TYPES_ATTRIBUTE, mediaTypes);
@@ -162,7 +140,6 @@ public abstract class RequestMappingInfoHandlerMapping extends AbstractHandlerMe
 
 		Map<String, MultiValueMap<String, String>> result = new LinkedHashMap<>();
 		uriVariables.forEach((uriVarKey, uriVarValue) -> {
-
 			int equalsIndex = uriVarValue.indexOf('=');
 			if (equalsIndex == -1) {
 				return;
@@ -198,12 +175,13 @@ public abstract class RequestMappingInfoHandlerMapping extends AbstractHandlerMe
 	@Override
 	protected HandlerMethod handleNoMatch(
 			Set<RequestMappingInfo> infos, String lookupPath, HttpServletRequest request) throws ServletException {
-
+	    // 创建 PartialMatchHelper 对象，解析可能的错误
 		PartialMatchHelper helper = new PartialMatchHelper(infos, request);
 		if (helper.isEmpty()) {
 			return null;
 		}
 
+		// 方法错误
 		if (helper.hasMethodsMismatch()) {
 			Set<String> methods = helper.getAllowedMethods();
 			if (HttpMethod.OPTIONS.matches(request.getMethod())) {
@@ -213,25 +191,27 @@ public abstract class RequestMappingInfoHandlerMapping extends AbstractHandlerMe
 			throw new HttpRequestMethodNotSupportedException(request.getMethod(), methods);
 		}
 
+		// 可消费的 Content-Type 错误
 		if (helper.hasConsumesMismatch()) {
 			Set<MediaType> mediaTypes = helper.getConsumableMediaTypes();
 			MediaType contentType = null;
 			if (StringUtils.hasLength(request.getContentType())) {
 				try {
 					contentType = MediaType.parseMediaType(request.getContentType());
-				}
-				catch (InvalidMediaTypeException ex) {
+				} catch (InvalidMediaTypeException ex) {
 					throw new HttpMediaTypeNotSupportedException(ex.getMessage());
 				}
 			}
 			throw new HttpMediaTypeNotSupportedException(contentType, new ArrayList<>(mediaTypes));
 		}
 
-		if (helper.hasProducesMismatch()) {
+        // 可生产的 Content-Type 错误
+        if (helper.hasProducesMismatch()) {
 			Set<MediaType> mediaTypes = helper.getProducibleMediaTypes();
 			throw new HttpMediaTypeNotAcceptableException(new ArrayList<>(mediaTypes));
 		}
 
+		// 参数错误
 		if (helper.hasParamsMismatch()) {
 			List<String[]> conditions = helper.getParamConditions();
 			throw new UnsatisfiedServletRequestParameterException(conditions, request.getParameterMap());
@@ -239,7 +219,6 @@ public abstract class RequestMappingInfoHandlerMapping extends AbstractHandlerMe
 
 		return null;
 	}
-
 
 	/**
 	 * Aggregate all partial matches and expose methods checking across them.
