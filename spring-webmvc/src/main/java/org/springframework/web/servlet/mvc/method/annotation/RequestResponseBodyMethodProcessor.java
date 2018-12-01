@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      https://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,12 +15,6 @@
  */
 
 package org.springframework.web.servlet.mvc.method.annotation;
-
-import java.io.IOException;
-import java.lang.reflect.Type;
-import java.util.List;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.core.Conventions;
 import org.springframework.core.MethodParameter;
@@ -44,6 +38,11 @@ import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.ModelAndViewContainer;
 import org.springframework.web.servlet.mvc.support.DefaultHandlerExceptionResolver;
+
+import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
+import java.lang.reflect.Type;
+import java.util.List;
 
 /**
  * Resolves method arguments annotated with {@code @RequestBody} and handles return
@@ -79,7 +78,6 @@ public class RequestResponseBodyMethodProcessor extends AbstractMessageConverter
 	 */
 	public RequestResponseBodyMethodProcessor(List<HttpMessageConverter<?>> converters,
 			@Nullable ContentNegotiationManager manager) {
-
 		super(converters, manager);
 	}
 
@@ -91,7 +89,6 @@ public class RequestResponseBodyMethodProcessor extends AbstractMessageConverter
 	 */
 	public RequestResponseBodyMethodProcessor(List<HttpMessageConverter<?>> converters,
 			@Nullable List<Object> requestResponseBodyAdvice) {
-
 		super(converters, null, requestResponseBodyAdvice);
 	}
 
@@ -101,7 +98,6 @@ public class RequestResponseBodyMethodProcessor extends AbstractMessageConverter
 	 */
 	public RequestResponseBodyMethodProcessor(List<HttpMessageConverter<?>> converters,
 			@Nullable ContentNegotiationManager manager, @Nullable List<Object> requestResponseBodyAdvice) {
-
 		super(converters, manager, requestResponseBodyAdvice);
 	}
 
@@ -113,8 +109,8 @@ public class RequestResponseBodyMethodProcessor extends AbstractMessageConverter
 
 	@Override
 	public boolean supportsReturnType(MethodParameter returnType) {
-		return (AnnotatedElementUtils.hasAnnotation(returnType.getContainingClass(), ResponseBody.class) ||
-				returnType.hasMethodAnnotation(ResponseBody.class));
+		return (AnnotatedElementUtils.hasAnnotation(returnType.getContainingClass(), ResponseBody.class)
+                || returnType.hasMethodAnnotation(ResponseBody.class));
 	}
 
 	/**
@@ -172,12 +168,15 @@ public class RequestResponseBodyMethodProcessor extends AbstractMessageConverter
 	public void handleReturnValue(@Nullable Object returnValue, MethodParameter returnType,
 			ModelAndViewContainer mavContainer, NativeWebRequest webRequest)
 			throws IOException, HttpMediaTypeNotAcceptableException, HttpMessageNotWritableException {
-
+	    // 设置已处理
 		mavContainer.setRequestHandled(true);
+
+		// 创建请求和响应
 		ServletServerHttpRequest inputMessage = createInputMessage(webRequest);
 		ServletServerHttpResponse outputMessage = createOutputMessage(webRequest);
 
 		// Try even with null return value. ResponseBodyAdvice could get involved.
+        // 使用 HttpMessageConverter 对对象进行转换，并写入到响应
 		writeWithMessageConverters(returnValue, returnType, inputMessage, outputMessage);
 	}
 
