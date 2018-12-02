@@ -1,11 +1,11 @@
 /*
- * Copyright 2002-2019 the original author or authors.
+ * Copyright 2002-2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      https://www.apache.org/licenses/LICENSE-2.0
+ *      http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -16,14 +16,13 @@
 
 package org.springframework.web.servlet.view;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
-import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.RequestToViewNameTranslator;
 import org.springframework.web.util.UrlPathHelper;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * {@link RequestToViewNameTranslator} that simply transforms the URI of
@@ -59,21 +58,37 @@ public class DefaultRequestToViewNameTranslator implements RequestToViewNameTran
 
 	private static final String SLASH = "/";
 
-
+    /**
+     * 前缀
+     */
 	private String prefix = "";
-
+    /**
+     * 后缀
+     */
 	private String suffix = "";
 
+    /**
+     * 分隔符
+     */
 	private String separator = SLASH;
 
+    /**
+     * 是否移除开头 {@link #SLASH}
+     */
 	private boolean stripLeadingSlash = true;
-
+    /**
+     * 是否移除末尾 {@link #SLASH}
+     */
 	private boolean stripTrailingSlash = true;
-
+    /**
+     * 是否移除拓展名
+     */
 	private boolean stripExtension = true;
 
+    /**
+     * URL 路径工具类
+     */
 	private UrlPathHelper urlPathHelper = new UrlPathHelper();
-
 
 	/**
 	 * Set the prefix to prepend to generated view names.
@@ -159,7 +174,6 @@ public class DefaultRequestToViewNameTranslator implements RequestToViewNameTran
 		this.urlPathHelper = urlPathHelper;
 	}
 
-
 	/**
 	 * Translates the request URI of the incoming {@link HttpServletRequest}
 	 * into the view name based on the configured parameters.
@@ -168,7 +182,9 @@ public class DefaultRequestToViewNameTranslator implements RequestToViewNameTran
 	 */
 	@Override
 	public String getViewName(HttpServletRequest request) {
-		String lookupPath = this.urlPathHelper.getLookupPathForRequest(request, HandlerMapping.LOOKUP_PATH);
+	    // 获得请求路径
+		String lookupPath = this.urlPathHelper.getLookupPathForRequest(request);
+		// 获得视图名
 		return (this.prefix + transformPath(lookupPath) + this.suffix);
 	}
 
@@ -183,15 +199,19 @@ public class DefaultRequestToViewNameTranslator implements RequestToViewNameTran
 	@Nullable
 	protected String transformPath(String lookupPath) {
 		String path = lookupPath;
+		// 移除开头 SLASH
 		if (this.stripLeadingSlash && path.startsWith(SLASH)) {
 			path = path.substring(1);
 		}
+		// 移除末尾 SLASH
 		if (this.stripTrailingSlash && path.endsWith(SLASH)) {
 			path = path.substring(0, path.length() - 1);
 		}
+		// 移除拓展名
 		if (this.stripExtension) {
 			path = StringUtils.stripFilenameExtension(path);
 		}
+		// 替换分隔符
 		if (!SLASH.equals(this.separator)) {
 			path = StringUtils.replace(path, SLASH, this.separator);
 		}
