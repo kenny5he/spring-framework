@@ -71,24 +71,23 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	/**
      * Cache of singleton factories: bean name to ObjectFactory.
      *
-     * 存放的是【早期】的单例 bean 的映射。
+     * 存放的是 ObjectFactory，可以理解为创建单例 bean 的 factory 。
      *
-     * 对应关系也是 bean name --> bean instance。
-     *
-     * 它与 {@link #singletonObjects} 的区别区别在，于 earlySingletonObjects 中存放的 bean 不一定是完整的。
-     *
-     * 从 {@link #getSingleton(String)} 方法中，中我们可以了解，bean 在创建过程中就已经加入到 earlySingletonObjects 中了，
-     * 所以当在 bean 的创建过程中就可以通过 getBean() 方法获取。
-     * 这个 Map 也是解决【循环依赖】的关键所在。
+     * 对应关系是 bean name --> ObjectFactory
      **/
 	private final Map<String, ObjectFactory<?>> singletonFactories = new HashMap<>(16);
 
 	/**
      * Cache of early singleton objects: bean name to bean instance.
      *
-     * 存放的是 ObjectFactory 的映射，可以理解为创建单例 bean 的 factory 。
+     * 存放的是早期的 bean，对应关系也是 bean name --> bean instance。
      *
-     * 对应关系是 bean name --> ObjectFactory
+     * 它与 {@link #singletonFactories} 区别在于 earlySingletonObjects 中存放的 bean 不一定是完整。
+     *
+     * 从 {@link #getSingleton(String)} 方法中，我们可以了解，bean 在创建过程中就已经加入到 earlySingletonObjects 中了。
+     * 所以当在 bean 的创建过程中，就可以通过 getBean() 方法获取。
+     *
+     * 这个 Map 也是【循环依赖】的关键所在。
      */
 	private final Map<String, Object> earlySingletonObjects = new HashMap<>(16);
 
