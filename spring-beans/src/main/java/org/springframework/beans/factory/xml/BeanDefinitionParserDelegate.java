@@ -962,7 +962,7 @@ public class BeanDefinitionParserDelegate {
 			RuntimeBeanReference ref = new RuntimeBeanReference(refName);
 			ref.setSource(extractSource(ele));
 			return ref;
-        // 将 value 属性值，构造为 RuntimeBeanReference 实例对象
+        // 将 value 属性值，构造为 TypedStringValue 实例对象
         } else if (hasValueAttribute) {
 			TypedStringValue valueHolder = new TypedStringValue(ele.getAttribute(VALUE_ATTRIBUTE));
 			valueHolder.setSource(extractSource(ele));
