@@ -71,7 +71,7 @@ public abstract class BeanFactoryUtils {
 	}
 
 	/**
-     * 去除 FactoryBean 的修饰符 $
+     * 去除 FactoryBean 的修饰符 &
      *
      * 如果 name 以 “&” 为前缀，那么会去掉该 "&" 。
      * 例如，name = "&studentService" ，则会是 name = "studentService"。
