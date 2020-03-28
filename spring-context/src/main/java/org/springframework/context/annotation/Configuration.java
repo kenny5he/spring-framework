@@ -28,6 +28,9 @@ import org.springframework.core.annotation.AliasFor;
 import org.springframework.stereotype.Component;
 
 /**
+ *
+ * Configuration 对Component进行CGlib增强，使配置类中的@Bean 方法互相调用时，保证其单例
+ *
  * Indicates that a class declares one or more {@link Bean @Bean} methods and
  * may be processed by the Spring container to generate bean definitions and
  * service requests for those beans at runtime, for example:

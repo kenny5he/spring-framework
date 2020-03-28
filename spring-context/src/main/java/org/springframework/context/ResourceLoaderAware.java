@@ -62,6 +62,7 @@ import org.springframework.core.io.ResourceLoader;
 public interface ResourceLoaderAware extends Aware {
 
 	/**
+	 * 加载资源
 	 * Set the ResourceLoader that this object runs in.
 	 * <p>This might be a ResourcePatternResolver, which can be checked
 	 * through {@code instanceof ResourcePatternResolver}. See also the

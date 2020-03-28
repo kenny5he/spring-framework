@@ -1147,6 +1147,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         // 主要是检查已经注册的 SmartInstantiationAwareBeanPostProcessor
 		Constructor<?>[] ctors = determineConstructorsFromBeanPostProcessors(beanClass, beanName);
         // 有参数情况时，创建 Bean 。先利用参数个数，类型等，确定最精确匹配的构造方法。
+		// 有带参的构造方法时，自动装配、模式为自动装配时(值为3)
         if (ctors != null || mbd.getResolvedAutowireMode() == AUTOWIRE_CONSTRUCTOR ||
 				mbd.hasConstructorArgumentValues() || !ObjectUtils.isEmpty(args))  {
 			return autowireConstructor(beanName, mbd, ctors, args);
@@ -1341,12 +1342,14 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
                 && hasInstantiationAwareBeanPostProcessors()) { // 是否持有 InstantiationAwareBeanPostProcessor
             // 迭代所有的 BeanPostProcessors
             for (BeanPostProcessor bp : getBeanPostProcessors()) {
-				if (bp instanceof InstantiationAwareBeanPostProcessor) { // 如果为 InstantiationAwareBeanPostProcessor
+				if (bp instanceof InstantiationAwareBeanPostProcessor) {
+					// 如果为 InstantiationAwareBeanPostProcessor
 					InstantiationAwareBeanPostProcessor ibp = (InstantiationAwareBeanPostProcessor) bp;
                     // 返回值为是否继续填充 bean
                     // postProcessAfterInstantiation：如果应该在 bean上面设置属性则返回 true，否则返回 false
                     // 一般情况下，应该是返回true 。
                     // 返回 false 的话，将会阻止在此 Bean 实例上调用任何后续的 InstantiationAwareBeanPostProcessor 实例。
+					// 如果自己实现了InstantiationAwareBeanPostProcessor postProcessAfterInstantiation方法并且返回false就不会属性填充
 					if (!ibp.postProcessAfterInstantiation(bw.getWrappedInstance(), beanName)) {
 						continueWithPropertyPopulation = false;
 						break;

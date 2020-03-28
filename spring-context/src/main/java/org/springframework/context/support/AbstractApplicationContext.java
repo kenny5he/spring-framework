@@ -500,6 +500,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 				postProcessBeanFactory(beanFactory);
 				// Invoke factory processors registered as beans in the context.
                 // 激活各种 BeanFactory 处理器，例如 BeanFactoryPostProcessor
+				// 完成所谓扫描 和 parse 类 To BeanDefinition    Add by zilu
 				invokeBeanFactoryPostProcessors(beanFactory);
 
 				// Register bean processors that intercept bean creation.
@@ -514,7 +515,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 				initMessageSource();
 
 				// Initialize event multicaster for this context.
-                // 初始化 Application Event Multicaster
+                // 初始化 Application Event Multicaster  事件广播
 				initApplicationEventMulticaster();
 
 				// Initialize other special beans in specific context subclasses.

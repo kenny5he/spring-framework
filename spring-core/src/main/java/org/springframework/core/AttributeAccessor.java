@@ -19,6 +19,11 @@ package org.springframework.core;
 import org.springframework.lang.Nullable;
 
 /**
+ * 属性存取器
+ * Accessor 存取器
+ *
+ * 主要提供对 BeanDefinition 元数据(额外数据)的操作的API，AbstractBeanDefinition 对此类进行实现
+ *
  * Interface defining a generic contract for attaching and accessing metadata
  * to/from arbitrary objects.
  *

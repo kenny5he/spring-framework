@@ -30,6 +30,12 @@ import java.util.Set;
 import java.util.function.Supplier;
 
 /**
+ * 父类BeanDefinition  RootBeanDefinition (作为模板 setAbstract(true)、作为父类Bean setBeanClass(XXXX.class))
+ * 子类BeanDefinition  ChildBeanDefinition
+ * 父类BeanDefinition 为子类BeanDefinition 提供构造模板，子类BeanDefinition继承父类BeanDefiniton的属性
+ *
+ * 子类BeanDefiniton通过构造方法设值的方式将父类BeanDefinition构造传递
+ *
  * A root bean definition represents the merged bean definition that backs
  * a specific bean in a Spring BeanFactory at runtime. It might have been created
  * from multiple original bean definitions that inherit from each other,

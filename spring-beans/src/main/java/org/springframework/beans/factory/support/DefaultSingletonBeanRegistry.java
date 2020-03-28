@@ -60,11 +60,14 @@ import java.util.concurrent.ConcurrentHashMap;
 public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements SingletonBeanRegistry {
 
 	/**
+	 * 容器单例池
      * Cache of singleton objects: bean name to bean instance.
      *
      * 存放的是单例 bean 的映射。
      *
      * 对应关系为 bean name --> bean instance
+	 *
+	 * 一级缓存
      */
 	private final Map<String, Object> singletonObjects = new ConcurrentHashMap<>(256);
 
@@ -74,6 +77,8 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
      * 存放的是 ObjectFactory，可以理解为创建单例 bean 的 factory 。
      *
      * 对应关系是 bean name --> ObjectFactory
+	 *
+	 * 二级缓存
      **/
 	private final Map<String, ObjectFactory<?>> singletonFactories = new HashMap<>(16);
 
@@ -88,6 +93,8 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
      * 所以当在 bean 的创建过程中，就可以通过 getBean() 方法获取。
      *
      * 这个 Map 也是【循环依赖】的关键所在。
+	 *
+	 * 三级缓存
      */
 	private final Map<String, Object> earlySingletonObjects = new HashMap<>(16);
 
@@ -217,9 +224,9 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 					if (singletonFactory != null) {
 					    // 获得 bean
 						singletonObject = singletonFactory.getObject();
-						// 添加 bean 到 earlySingletonObjects 中
+						// 添加 bean 到 earlySingletonObjects 中 添加到三级缓存中
 						this.earlySingletonObjects.put(beanName, singletonObject);
-						// 从 singletonFactories 中移除对应的 ObjectFactory
+						// 从 singletonFactories 中移除对应的 ObjectFactory   删除二级缓存中的值，从二级缓存中获取值比较麻烦，它是一个工厂
 						this.singletonFactories.remove(beanName);
 					}
 				}

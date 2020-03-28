@@ -23,6 +23,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
+ *
+ * 用来标注相同的Bean Type存在多个时，含有@Primary标注的，优先加载
+ *
  * Indicates that a bean should be given preference when multiple candidates
  * are qualified to autowire a single-valued dependency. If exactly one
  * 'primary' bean exists among the candidates, it will be the autowired value.

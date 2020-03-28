@@ -788,7 +788,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 			RootBeanDefinition bd = getMergedLocalBeanDefinition(beanName);
 			// 单例 && 非延迟加载
 			if (!bd.isAbstract() && bd.isSingleton() && !bd.isLazyInit()) {
-			    // 如果是 FactoryBean
+			    // 如果是 FactoryBean，用户平常一般不会创建factoryBean
 				if (isFactoryBean(beanName)) {
 				    // 获得 FactoryBean 自身这个 Bean
 					Object bean = getBean(FACTORY_BEAN_PREFIX + beanName);
@@ -810,6 +810,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
 						}
 					}
 				} else {
+					// 普通创建bean方式
                     // 如果非 FactoryBean ，直接加载 Bean 对象
                     getBean(beanName);
 				}

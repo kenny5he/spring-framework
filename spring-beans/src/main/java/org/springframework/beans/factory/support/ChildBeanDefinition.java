@@ -22,6 +22,11 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 
 /**
+ * 父类BeanDefinition  RootBeanDefinition
+ * 子类BeanDefinition  ChildBeanDefinition
+ * 父类BeanDefinition 为子类BeanDefinition 提供构造模板，子类BeanDefinition继承父类BeanDefiniton的属性
+ * 子类BeanDefiniton通过构造方法设值的方式将父类BeanDefinition构造传递
+ *
  * Bean definition for beans which inherit settings from their parent.
  * Child bean definitions have a fixed dependency on a parent bean definition.
  *
