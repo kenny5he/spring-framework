@@ -61,7 +61,7 @@ import org.springframework.web.servlet.mvc.method.RequestMappingInfoHandlerMappi
  * <p><strong>Deprecation Note:</strong></p> In 5.2.4,
  * {@link #setUseSuffixPatternMatch(boolean) useSuffixPatternMatch} and
  * {@link #setUseRegisteredSuffixPatternMatch(boolean) useRegisteredSuffixPatternMatch}
- * are deprecated in order to discourage use of path extensions for request
+ * were deprecated in order to discourage use of path extensions for request
  * mapping and for content negotiation (with similar deprecations in
  * {@link org.springframework.web.accept.ContentNegotiationManagerFactoryBean
  * ContentNegotiationManagerFactoryBean}). For further context, please read issue
@@ -75,7 +75,7 @@ import org.springframework.web.servlet.mvc.method.RequestMappingInfoHandlerMappi
 public class RequestMappingHandlerMapping extends RequestMappingInfoHandlerMapping
 		implements MatchableHandlerMapping, EmbeddedValueResolverAware {
 
-	private boolean useSuffixPatternMatch = true;
+	private boolean useSuffixPatternMatch = false;
 
 	private boolean useRegisteredSuffixPatternMatch = false;
 
@@ -94,14 +94,13 @@ public class RequestMappingHandlerMapping extends RequestMappingInfoHandlerMappi
 	/**
 	 * Whether to use suffix pattern match (".*") when matching patterns to
 	 * requests. If enabled a method mapped to "/users" also matches to "/users.*".
-	 * <p>The default value is {@code true}.
+	 * <p>By default value this is set to {@code false}.
 	 * <p>Also see {@link #setUseRegisteredSuffixPatternMatch(boolean)} for
 	 * more fine-grained control over specific suffixes to allow.
-	 * @deprecated as of 5.2.4. See class level comment about deprecation of
+	 * @deprecated as of 5.2.4. See class level note on the deprecation of
 	 * path extension config options. As there is no replacement for this method,
-	 * for the time being it's necessary to set it to {@code false}. In 5.3
-	 * when {@code false} becomes the default, use of this property will no
-	 * longer be necessary.
+	 * in 5.2.x it is necessary to set it to {@code false}. In 5.3 {@code false}
+	 * becomes the default, and use of this property is longer be necessary.
 	 */
 	@Deprecated
 	public void setUseSuffixPatternMatch(boolean useSuffixPatternMatch) {
@@ -114,7 +113,7 @@ public class RequestMappingHandlerMapping extends RequestMappingInfoHandlerMappi
 	 * is generally recommended to reduce ambiguity and to avoid issues such as
 	 * when a "." appears in the path for other reasons.
 	 * <p>By default this is set to "false".
-	 * @deprecated as of 5.2.4. See class level comment about deprecation of
+	 * @deprecated as of 5.2.4. See class level note on the deprecation of
 	 * path extension config options.
 	 */
 	@Deprecated
@@ -192,8 +191,8 @@ public class RequestMappingHandlerMapping extends RequestMappingInfoHandlerMappi
 
 	/**
 	 * Whether to use registered suffixes for pattern matching.
-	 * @deprecated as of 5.2.4. See class-level note on the deprecation of path
-	 * extension config options.
+	 * @deprecated as of 5.2.4. See deprecation notice on
+	 * {@link #setUseSuffixPatternMatch(boolean)}.
 	 */
 	@Deprecated
 	public boolean useSuffixPatternMatch() {
@@ -202,8 +201,8 @@ public class RequestMappingHandlerMapping extends RequestMappingInfoHandlerMappi
 
 	/**
 	 * Whether to use registered suffixes for pattern matching.
-	 * @deprecated as of 5.2.4. See class-level note on the deprecation of path
-	 * extension config options.
+	 * @deprecated as of 5.2.4. See deprecation notice on
+	 * {@link #setUseRegisteredSuffixPatternMatch(boolean)}.
 	 */
 	@Deprecated
 	public boolean useRegisteredSuffixPatternMatch() {
