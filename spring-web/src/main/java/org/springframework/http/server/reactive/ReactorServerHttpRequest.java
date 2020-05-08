@@ -34,7 +34,6 @@ import reactor.netty.http.server.HttpServerRequest;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.NettyDataBufferFactory;
 import org.springframework.http.HttpCookie;
-import org.springframework.http.HttpHeaders;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.LinkedMultiValueMap;
@@ -60,7 +59,7 @@ class ReactorServerHttpRequest extends AbstractServerHttpRequest {
 	public ReactorServerHttpRequest(HttpServerRequest request, NettyDataBufferFactory bufferFactory)
 			throws URISyntaxException {
 
-		super(initUri(request), "", initHeaders(request));
+		super(initUri(request), "", new NettyHeadersAdapter(request.requestHeaders()));
 		Assert.notNull(bufferFactory, "DataBufferFactory must not be null");
 		this.request = request;
 		this.bufferFactory = bufferFactory;
@@ -127,11 +126,6 @@ class ReactorServerHttpRequest extends AbstractServerHttpRequest {
 			}
 		}
 		return uri;
-	}
-
-	private static HttpHeaders initHeaders(HttpServerRequest channel) {
-		NettyHeadersAdapter headersMap = new NettyHeadersAdapter(channel.requestHeaders());
-		return new HttpHeaders(headersMap);
 	}
 
 

@@ -23,6 +23,7 @@ import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.security.cert.X509Certificate;
 import java.util.Enumeration;
+import java.util.Locale;
 import java.util.Map;
 
 import javax.servlet.AsyncContext;
@@ -45,6 +46,7 @@ import org.springframework.http.MediaType;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.LinkedCaseInsensitiveMap;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -78,8 +80,8 @@ class ServletServerHttpRequest extends AbstractServerHttpRequest {
 		this(createDefaultHttpHeaders(request), request, asyncContext, servletPath, bufferFactory, bufferSize);
 	}
 
-	public ServletServerHttpRequest(HttpHeaders headers, HttpServletRequest request, AsyncContext asyncContext,
-			String servletPath, DataBufferFactory bufferFactory, int bufferSize)
+	public ServletServerHttpRequest(MultiValueMap<String, String> headers, HttpServletRequest request,
+			AsyncContext asyncContext, String servletPath, DataBufferFactory bufferFactory, int bufferSize)
 			throws IOException, URISyntaxException {
 
 		super(initUri(request), request.getContextPath() + servletPath, initHeaders(headers, request));
@@ -100,8 +102,9 @@ class ServletServerHttpRequest extends AbstractServerHttpRequest {
 	}
 
 
-	private static HttpHeaders createDefaultHttpHeaders(HttpServletRequest request) {
-		HttpHeaders headers = new HttpHeaders();
+	private static MultiValueMap<String, String> createDefaultHttpHeaders(HttpServletRequest request) {
+		MultiValueMap<String, String> headers =
+				CollectionUtils.toMultiValueMap(new LinkedCaseInsensitiveMap<>(8, Locale.ENGLISH));
 		for (Enumeration<?> names = request.getHeaderNames(); names.hasMoreElements(); ) {
 			String name = (String) names.nextElement();
 			for (Enumeration<?> values = request.getHeaders(name); values.hasMoreElements(); ) {
@@ -121,34 +124,36 @@ class ServletServerHttpRequest extends AbstractServerHttpRequest {
 		return new URI(url.toString());
 	}
 
-	private static HttpHeaders initHeaders(HttpHeaders headers, HttpServletRequest request) {
-		MediaType contentType = headers.getContentType();
-		if (contentType == null) {
+	private static MultiValueMap<String, String> initHeaders(
+			MultiValueMap<String, String> headerValues, HttpServletRequest request) {
+
+		HttpHeaders headers = null;
+		MediaType contentType = null;
+		if (!StringUtils.hasLength(headerValues.getFirst(HttpHeaders.CONTENT_TYPE))) {
 			String requestContentType = request.getContentType();
 			if (StringUtils.hasLength(requestContentType)) {
 				contentType = MediaType.parseMediaType(requestContentType);
+				headers = new HttpHeaders(headerValues);
 				headers.setContentType(contentType);
 			}
 		}
 		if (contentType != null && contentType.getCharset() == null) {
 			String encoding = request.getCharacterEncoding();
 			if (StringUtils.hasLength(encoding)) {
-				Charset charset = Charset.forName(encoding);
 				Map<String, String> params = new LinkedCaseInsensitiveMap<>();
 				params.putAll(contentType.getParameters());
-				params.put("charset", charset.toString());
-				headers.setContentType(
-						new MediaType(contentType.getType(), contentType.getSubtype(),
-								params));
+				params.put("charset", Charset.forName(encoding).toString());
+				headers.setContentType(new MediaType(contentType, params));
 			}
 		}
-		if (headers.getContentLength() == -1) {
+		if (headerValues.getFirst(HttpHeaders.CONTENT_TYPE) == null) {
 			int contentLength = request.getContentLength();
 			if (contentLength != -1) {
+				headers = (headers != null ? headers : new HttpHeaders(headerValues));
 				headers.setContentLength(contentLength);
 			}
 		}
-		return headers;
+		return (headers != null ? headers : headerValues);
 	}
 
 
