@@ -18,6 +18,7 @@ package org.springframework.jdbc.core.namedparam;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcOperations;
@@ -225,6 +226,37 @@ public interface NamedParameterJdbcOperations {
 	 * @throws DataAccessException if the query fails
 	 */
 	<T> List<T> query(String sql, RowMapper<T> rowMapper) throws DataAccessException;
+
+	/**
+	 * Query given SQL to create a prepared statement from SQL and a list
+	 * of arguments to bind to the query, mapping each row to a Java object
+	 * via a RowMapper, and turning it into an iterable and closeable Stream.
+	 * @param sql the SQL query to execute
+	 * @param paramSource container of arguments to bind to the query
+	 * @param rowMapper object that will map one object per row
+	 * @return the result Stream, containing mapped objects, needing to be
+	 * closed once fully processed (e.g. through a try-with-resources clause)
+	 * @throws DataAccessException if the query fails
+	 * @since 5.3
+	 */
+	<T> Stream<T> queryForStream(String sql, SqlParameterSource paramSource, RowMapper<T> rowMapper)
+			throws DataAccessException;
+
+	/**
+	 * Query given SQL to create a prepared statement from SQL and a list
+	 * of arguments to bind to the query, mapping each row to a Java object
+	 * via a RowMapper, and turning it into an iterable and closeable Stream.
+	 * @param sql the SQL query to execute
+	 * @param paramMap map of parameters to bind to the query
+	 * (leaving it to the PreparedStatement to guess the corresponding SQL type)
+	 * @param rowMapper object that will map one object per row
+	 * @return the result Stream, containing mapped objects, needing to be
+	 * closed once fully processed (e.g. through a try-with-resources clause)
+	 * @throws DataAccessException if the query fails
+	 * @since 5.3
+	 */
+	<T> Stream<T> queryForStream(String sql, Map<String, ?> paramMap, RowMapper<T> rowMapper)
+			throws DataAccessException;
 
 	/**
 	 * Query given SQL to create a prepared statement from SQL and a list
@@ -498,8 +530,6 @@ public interface NamedParameterJdbcOperations {
 	 * @param sql the SQL statement to execute
 	 * @param batchValues the array of Maps containing the batch of arguments for the query
 	 * @return an array containing the numbers of rows affected by each update in the batch
-	 * (may also contain special JDBC-defined negative values for affected rows such as
-	 * {@link java.sql.Statement#SUCCESS_NO_INFO}/{@link java.sql.Statement#EXECUTE_FAILED})
 	 * @throws DataAccessException if there is any problem issuing the update
 	 */
 	int[] batchUpdate(String sql, Map<String, ?>[] batchValues);
@@ -507,11 +537,8 @@ public interface NamedParameterJdbcOperations {
 	/**
 	 * Execute a batch using the supplied SQL statement with the batch of supplied arguments.
 	 * @param sql the SQL statement to execute
-	 * @param batchArgs the array of {@link SqlParameterSource} containing the batch of
-	 * arguments for the query
+	 * @param batchArgs the array of {@link SqlParameterSource} containing the batch of arguments for the query
 	 * @return an array containing the numbers of rows affected by each update in the batch
-	 * (may also contain special JDBC-defined negative values for affected rows such as
-	 * {@link java.sql.Statement#SUCCESS_NO_INFO}/{@link java.sql.Statement#EXECUTE_FAILED})
 	 * @throws DataAccessException if there is any problem issuing the update
 	 */
 	int[] batchUpdate(String sql, SqlParameterSource[] batchArgs);

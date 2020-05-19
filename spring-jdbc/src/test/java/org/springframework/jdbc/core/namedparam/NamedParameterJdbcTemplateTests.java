@@ -28,6 +28,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 
 import javax.sql.DataSource;
 
@@ -384,6 +386,39 @@ public class NamedParameterJdbcTemplateTests {
 
 		assertThat(cust.getId() == 1).as("Customer id was assigned correctly").isTrue();
 		assertThat(cust.getForename().equals("rod")).as("Customer forename was assigned correctly").isTrue();
+		verify(connection).prepareStatement(SELECT_NAMED_PARAMETERS_PARSED);
+		verify(preparedStatement).setObject(1, 1, Types.DECIMAL);
+		verify(preparedStatement).setString(2, "UK");
+		verify(resultSet).close();
+		verify(preparedStatement).close();
+		verify(connection).close();
+	}
+
+	@Test
+	public void testQueryForStreamWithRowMapper() throws SQLException {
+		given(resultSet.next()).willReturn(true, false);
+		given(resultSet.getInt("id")).willReturn(1);
+		given(resultSet.getString("forename")).willReturn("rod");
+
+		params.put("id", new SqlParameterValue(Types.DECIMAL, 1));
+		params.put("country", "UK");
+		AtomicInteger count = new AtomicInteger();
+
+		try (Stream<Customer> s = namedParameterTemplate.queryForStream(SELECT_NAMED_PARAMETERS, params,
+				(rs, rownum) -> {
+					Customer cust1 = new Customer();
+					cust1.setId(rs.getInt(COLUMN_NAMES[0]));
+					cust1.setForename(rs.getString(COLUMN_NAMES[1]));
+					return cust1;
+				})) {
+			s.forEach(cust -> {
+				count.incrementAndGet();
+				assertThat(cust.getId() == 1).as("Customer id was assigned correctly").isTrue();
+				assertThat(cust.getForename().equals("rod")).as("Customer forename was assigned correctly").isTrue();
+			});
+		}
+
+		assertThat(count.get()).isEqualTo(1);
 		verify(connection).prepareStatement(SELECT_NAMED_PARAMETERS_PARSED);
 		verify(preparedStatement).setObject(1, 1, Types.DECIMAL);
 		verify(preparedStatement).setString(2, "UK");
