@@ -879,7 +879,7 @@ public abstract class TransactionAspectSupport implements BeanFactoryAware, Init
 										},
 										this::commitTransactionAfterReturning,
 										(txInfo, err) -> Mono.empty(),
-										this::commitTransactionAfterReturning)
+										this::rollbackTransactionOnCancel)
 										.onErrorResume(ex ->
 												completeTransactionAfterThrowing(it, ex).then(Mono.error(ex)));
 							}
@@ -909,7 +909,7 @@ public abstract class TransactionAspectSupport implements BeanFactoryAware, Init
 											},
 											this::commitTransactionAfterReturning,
 											(txInfo, ex) -> Mono.empty(),
-											this::commitTransactionAfterReturning)
+											this::rollbackTransactionOnCancel)
 									.onErrorResume(ex ->
 											completeTransactionAfterThrowing(it, ex).then(Mono.error(ex)));
 						}
@@ -972,6 +972,16 @@ public abstract class TransactionAspectSupport implements BeanFactoryAware, Init
 					logger.trace("Completing transaction for [" + txInfo.getJoinpointIdentification() + "]");
 				}
 				return txInfo.getTransactionManager().commit(txInfo.getReactiveTransaction());
+			}
+			return Mono.empty();
+		}
+
+		private Mono<Void> rollbackTransactionOnCancel(@Nullable ReactiveTransactionInfo txInfo) {
+			if (txInfo != null && txInfo.getReactiveTransaction() != null) {
+				if (logger.isTraceEnabled()) {
+					logger.trace("Rolling back transaction for [" + txInfo.getJoinpointIdentification() + "] after cancellation");
+				}
+				return txInfo.getTransactionManager().rollback(txInfo.getReactiveTransaction());
 			}
 			return Mono.empty();
 		}
