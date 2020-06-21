@@ -17,6 +17,7 @@
 package org.springframework.beans.factory;
 
 /**
+ *
  * Interface to be implemented by beans that want to release resources on destruction.
  * A {@link BeanFactory} will invoke the destroy method on individual destruction of a
  * scoped bean. An {@link org.springframework.context.ApplicationContext} is supposed

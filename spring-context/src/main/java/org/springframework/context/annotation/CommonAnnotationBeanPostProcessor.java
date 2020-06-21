@@ -75,12 +75,16 @@ import org.springframework.util.StringUtils;
 import org.springframework.util.StringValueResolver;
 
 /**
+ *
+ * 通过 后置处理器进入此类，进行解析 @Resource @Inject @Ejb 等JSR 规范注解
+ *
  * {@link org.springframework.beans.factory.config.BeanPostProcessor} implementation
  * that supports common Java annotations out of the box, in particular the JSR-250
  * annotations in the {@code javax.annotation} package. These common Java
  * annotations are supported in many Java EE 5 technologies (e.g. JSF 1.2),
  * as well as in Java 6's JAX-WS.
  *
+ * 通过继承 InitDestroyAnnotationBeanPostProcessor 接口对 后置处理器注解 @PostConstruct 和 @PreDestroy 提供支持
  * <p>This post-processor includes support for the {@link javax.annotation.PostConstruct}
  * and {@link javax.annotation.PreDestroy} annotations - as init annotation
  * and destroy annotation, respectively - through inheriting from
@@ -196,8 +200,11 @@ public class CommonAnnotationBeanPostProcessor extends InitDestroyAnnotationBean
 	 */
 	public CommonAnnotationBeanPostProcessor() {
 		setOrder(Ordered.LOWEST_PRECEDENCE - 3);
+		// 设置初始的注解类型为@PostConstruct
 		setInitAnnotationType(PostConstruct.class);
+		// 设置销毁的注解为@ PreDestroy
 		setDestroyAnnotationType(PreDestroy.class);
+		// 当使用@Resource注解时，忽略JAX-WS的资源类型
 		ignoreResourceType("javax.xml.ws.WebServiceContext");
 	}
 
@@ -288,7 +295,12 @@ public class CommonAnnotationBeanPostProcessor extends InitDestroyAnnotationBean
 		}
 	}
 
-
+	/**
+	 * 通过 后置处理器进入此类，进行解析 @Resource @Inject @Ejb 等JSR 规范注解
+	 * @param beanDefinition Bean的属性封装定义
+	 * @param beanType Bean的类类型
+	 * @param beanName Bean的名称
+	 */
 	@Override
 	public void postProcessMergedBeanDefinition(RootBeanDefinition beanDefinition, Class<?> beanType, String beanName) {
 		super.postProcessMergedBeanDefinition(beanDefinition, beanType, beanName);
@@ -313,8 +325,10 @@ public class CommonAnnotationBeanPostProcessor extends InitDestroyAnnotationBean
 
 	@Override
 	public PropertyValues postProcessProperties(PropertyValues pvs, Object bean, String beanName) {
+		// 获取@Resource注解中配置的属性值元数据
 		InjectionMetadata metadata = findResourceMetadata(beanName, bean.getClass(), pvs);
 		try {
+			// 注入属性值，与AutowiredAnnotationBeanPostProcessor中处理相同
 			metadata.inject(bean, beanName, pvs);
 		}
 		catch (Throwable ex) {
@@ -344,6 +358,7 @@ public class CommonAnnotationBeanPostProcessor extends InitDestroyAnnotationBean
 					if (metadata != null) {
 						metadata.clear(pvs);
 					}
+					// 构造解析Resource注解元数据
 					metadata = buildResourceMetadata(clazz);
 					this.injectionMetadataCache.put(cacheKey, metadata);
 				}
@@ -475,6 +490,7 @@ public class CommonAnnotationBeanPostProcessor extends InitDestroyAnnotationBean
 	}
 
 	/**
+	 * 根据给定名称或者类型获取资源对象
 	 * Obtain the resource object for the given name and type.
 	 * @param element the descriptor for the annotated field/method
 	 * @param requestingBeanName the name of the requesting bean
@@ -483,17 +499,22 @@ public class CommonAnnotationBeanPostProcessor extends InitDestroyAnnotationBean
 	 */
 	protected Object getResource(LookupElement element, @Nullable String requestingBeanName)
 			throws NoSuchBeanDefinitionException {
-
+		// 如果注解对象元素的mappedName属性不为空
 		if (StringUtils.hasLength(element.mappedName)) {
+			// 根据JNDI名称和类型去Spring的JNDI容器中获取Bean
 			return this.jndiFactory.getBean(element.mappedName, element.lookupType);
 		}
+		// 如果该后置处理器的alwaysUseJndiLookup属性值为true
 		if (this.alwaysUseJndiLookup) {
+			// 从Spring的JNDI容器中查找指定JDNI名称和类型的Bean
 			return this.jndiFactory.getBean(element.name, element.lookupType);
 		}
 		if (this.resourceFactory == null) {
 			throw new NoSuchBeanDefinitionException(element.lookupType,
 					"No resource factory configured - specify the 'resourceFactory' property");
 		}
+		// 使用autowiring自动依赖注入装配，通过给定的名称和类型从资源容器获取Bean对象
+		// 一般情况下，都是走这一步
 		return autowireResource(this.resourceFactory, element, requestingBeanName);
 	}
 
@@ -518,6 +539,8 @@ public class CommonAnnotationBeanPostProcessor extends InitDestroyAnnotationBean
 			DependencyDescriptor descriptor = element.getDependencyDescriptor();
 			if (this.fallbackToDefaultTypeMatch && element.isDefaultName && !factory.containsBean(name)) {
 				autowiredBeanNames = new LinkedHashSet<>();
+				// 根据类型从Spring容器中查找资源
+				// 调用依赖解析器，跟@Autowired是同样的代码
 				resource = beanFactory.resolveDependency(descriptor, requestingBeanName, autowiredBeanNames, null);
 				if (resource == null) {
 					throw new NoSuchBeanDefinitionException(element.getLookupType(), "No resolvable resource object");
@@ -529,6 +552,7 @@ public class CommonAnnotationBeanPostProcessor extends InitDestroyAnnotationBean
 			}
 		}
 		else {
+			// 根据名称从Spring容器中查找资源
 			resource = factory.getBean(name, element.lookupType);
 			autowiredBeanNames = Collections.singleton(name);
 		}
@@ -537,6 +561,7 @@ public class CommonAnnotationBeanPostProcessor extends InitDestroyAnnotationBean
 			ConfigurableBeanFactory beanFactory = (ConfigurableBeanFactory) factory;
 			for (String autowiredBeanName : autowiredBeanNames) {
 				if (requestingBeanName != null && beanFactory.containsBean(autowiredBeanName)) {
+					// 注册Bean的依赖关系
 					beanFactory.registerDependentBean(autowiredBeanName, requestingBeanName);
 				}
 			}
@@ -611,6 +636,7 @@ public class CommonAnnotationBeanPostProcessor extends InitDestroyAnnotationBean
 	 */
 	private class ResourceElement extends LookupElement {
 
+		// 是否懒加载，默认是false
 		private final boolean lazyLookup;
 
 		public ResourceElement(Member member, AnnotatedElement ae, @Nullable PropertyDescriptor pd) {
@@ -643,6 +669,13 @@ public class CommonAnnotationBeanPostProcessor extends InitDestroyAnnotationBean
 			this.lazyLookup = (lazy != null && lazy.value());
 		}
 
+		/**
+		 * {@link org.springframework.beans.factory.annotation.InjectionMetadata.InjectedElement#inject(Object, String, PropertyValues)} 方法中通过
+		 * 字段或方法注入，此方法提供注入的值
+		 * @param target
+		 * @param requestingBeanName
+		 * @return
+		 */
 		@Override
 		protected Object getResourceToInject(Object target, @Nullable String requestingBeanName) {
 			return (this.lazyLookup ? buildLazyResourceProxy(this, requestingBeanName) :

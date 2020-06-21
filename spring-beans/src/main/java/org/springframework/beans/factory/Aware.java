@@ -23,7 +23,7 @@ package org.springframework.beans.factory;
  * 		2、BeanNameAware    提供对BeanName进行操作
  * 		3、ApplicationEventPublisherAware   主要用于事件的发布
  * 		4、BeanClassLoadAware 相关的类加载器
- * 		5、BeanFactoryAware 声明BeanFactory
+ * 		5、BeanFactoryAware 声明BeanFactory，通过其获取BeanFactory，通过BeanFactory将普通Java对象封装为Spring Bean注册到Spring 容器中。
  *		6. ResourceLoaderAware 加载资源(基本不用，一般使用new ClassPathResource加载资源)
  * Marker superinterface indicating that a bean is eligible to be
  * notified by the Spring container of a particular framework object

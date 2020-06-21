@@ -32,6 +32,20 @@ import org.springframework.util.StringValueResolver;
  * HUAWEI自研框架Jalor5 采用子类继承此类的方式，通过实现 loadProperties方法与resolvePlaceholder(其中调用processProperties)
  * 通过一个HaspMap存取已解析的properties属性，提供静态方法通过resolveStringValue获取真实值,以此实现配置中心加载属性值
  *
+ * <!-- 设置属性文件加载顺序，使其能在B配置文件中的占位符能引用A配置文件 -->
+ * <context:property-placeholder order="1" ignore-unresolvable="true" location="classpath*:zheng-upms-client.properties"/>
+ * <!--  使用其进行加载配置文件 -->
+ * <bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+ *     <property name="order" value="2" />
+ *     <property name="locations">
+ *         <list>
+ *             <value>classpath:jdbc.properties</value>
+ *             <value>classpath:redis.properties</value>
+ *             <value>classpath:zheng-upms-client.properties</value>
+ *         </list>
+ *     </property>
+ * </bean>
+ *
  * {@link PlaceholderConfigurerSupport} subclass that resolves ${...} placeholders
  * against {@link #setLocation local} {@link #setProperties properties} and/or system properties
  * and environment variables.

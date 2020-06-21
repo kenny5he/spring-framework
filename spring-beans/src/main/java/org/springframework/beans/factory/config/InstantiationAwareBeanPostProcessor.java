@@ -23,6 +23,15 @@ import org.springframework.beans.PropertyValues;
 import org.springframework.lang.Nullable;
 
 /**
+ *
+ * Spring 声明周期：实例化过程
+ * 		@Resource注解解析类 CommonAnnotationBeanPostProcessor 均实现此类方法实例化bean
+ * 		@Autowired注解解析类 AutowiredAnnotationBeanPostProcessor 均实现此类方法实例化bean
+ *
+ * Spring Bean的实例化和初始化两个阶段的主要作用：
+ * 1、实例化----实例化的过程是一个创建Bean的过程，即调用Bean的构造函数，单例的Bean放入单例池中
+ * 2、初始化----初始化的过程是一个赋值的过程，即调用Bean的getter/setter方法或者constructor构造方法，设置Bean的属性
+ *
  * Subinterface of {@link BeanPostProcessor} that adds a before-instantiation callback,
  * and a callback after instantiation but before explicit properties are set or
  * autowiring occurs.
@@ -120,6 +129,9 @@ public interface InstantiationAwareBeanPostProcessor extends BeanPostProcessor {
 	}
 
 	/**
+	 *
+	 * 标识被弃用
+	 *
 	 * Post-process the given property values before the factory applies them
 	 * to the given bean. Allows for checking whether all dependencies have been
 	 * satisfied, for example based on a "Required" annotation on bean property setters.

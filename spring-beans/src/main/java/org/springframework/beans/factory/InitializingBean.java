@@ -17,6 +17,7 @@
 package org.springframework.beans.factory;
 
 /**
+ *
  * Interface to be implemented by beans that need to react once all their properties
  * have been set by a {@link BeanFactory}: e.g. to perform custom initialization,
  * or merely to check that all mandatory properties have been set.
@@ -34,6 +35,8 @@ package org.springframework.beans.factory;
 public interface InitializingBean {
 
 	/**
+	 * Bean的 初始化回调
+	 *
      * 该方法在 BeanFactory 设置完了所有属性之后被调用
      * 该方法允许 bean 实例设置了所有 bean 属性时执行初始化工作，如果该过程出现了错误则需要抛出异常
      *

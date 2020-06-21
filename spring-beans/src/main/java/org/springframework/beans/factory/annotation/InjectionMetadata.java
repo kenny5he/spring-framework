@@ -36,6 +36,10 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.ReflectionUtils;
 
 /**
+ *  CommonAnnotationBeanPostProcessor(@Resource) 和 AutowiredAnnotationBeanPostProcessor(@Autowired) 元数据处理均由本类处理
+ *  ResourceElement / AutowiredFieldElement  均继承 InjectionMetadata.InjectedElement 并有类中的inject方法，解析注入赋值
+ *
+ *
  * Internal class for managing injection metadata.
  * Not intended for direct use in applications.
  *
@@ -235,7 +239,9 @@ public class InjectionMetadata {
 
 			if (this.isField) {
 				Field field = (Field) this.member;
+				// 强制访问
 				ReflectionUtils.makeAccessible(field);
+				// 给字段赋值，即属性注入
 				field.set(target, getResourceToInject(target, requestingBeanName));
 			}
 			else {
@@ -244,6 +250,7 @@ public class InjectionMetadata {
 				}
 				try {
 					Method method = (Method) this.member;
+					//方法注入
 					ReflectionUtils.makeAccessible(method);
 					method.invoke(target, getResourceToInject(target, requestingBeanName));
 				}

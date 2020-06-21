@@ -42,7 +42,6 @@ public class MapFactoryBean extends AbstractFactoryBean<Map<Object, Object>> {
 	@Nullable
 	private Class<? extends Map> targetMapClass;
 
-
 	/**
 	 * Set the source Map, typically populated via XML "map" elements.
 	 */
