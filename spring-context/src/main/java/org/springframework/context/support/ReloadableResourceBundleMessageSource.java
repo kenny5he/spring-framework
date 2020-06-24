@@ -39,6 +39,9 @@ import org.springframework.util.PropertiesPersister;
 import org.springframework.util.StringUtils;
 
 /**
+ * Spring 国际化处理
+ *
+ *
  * Spring-specific {@link org.springframework.context.MessageSource} implementation
  * that accesses resource bundles using specified basenames, participating in the
  * Spring {@link org.springframework.context.ApplicationContext}'s resource loading.
@@ -87,19 +90,21 @@ import org.springframework.util.StringUtils;
  */
 public class ReloadableResourceBundleMessageSource extends AbstractResourceBasedMessageSource
 		implements ResourceLoaderAware {
-
+	// 标示该类支持xml和properties两种资源文件
 	private static final String PROPERTIES_SUFFIX = ".properties";
 
 	private static final String XML_SUFFIX = ".xml";
 
-
+	// //编码类型
 	@Nullable
 	private Properties fileEncodings;
 
+	//默认自动刷新，这也是我们选择 ReloadableResourceBundleMessageSource 而不是用ResourceBundleMessageSource的一个原因
 	private boolean concurrentRefresh = true;
 
 	private PropertiesPersister propertiesPersister = new DefaultPropertiesPersister();
 
+	//默认的资源加载器
 	private ResourceLoader resourceLoader = new DefaultResourceLoader();
 
 	// Cache to hold filename lists per Locale
@@ -201,6 +206,7 @@ public class ReloadableResourceBundleMessageSource extends AbstractResourceBased
 	@Override
 	@Nullable
 	protected MessageFormat resolveCode(String code, Locale locale) {
+		// 刷新
 		if (getCacheMillis() < 0) {
 			PropertiesHolder propHolder = getMergedProperties(locale);
 			MessageFormat result = propHolder.getMessageFormat(code, locale);
@@ -209,6 +215,7 @@ public class ReloadableResourceBundleMessageSource extends AbstractResourceBased
 			}
 		}
 		else {
+			// 通过key查找资源。从配置的的多个basename中的多个文件中查找文件
 			for (String basename : getBasenameSet()) {
 				List<String> filenames = calculateAllFilenames(basename, locale);
 				for (String filename : filenames) {
@@ -368,6 +375,7 @@ public class ReloadableResourceBundleMessageSource extends AbstractResourceBased
 			}
 		}
 		else {
+			// 第一次没有缓存, 新创建PropertiesHolder接着放到缓存
 			propHolder = new PropertiesHolder();
 			PropertiesHolder existingHolder = this.cachedProperties.putIfAbsent(filename, propHolder);
 			if (existingHolder != null) {
@@ -388,10 +396,13 @@ public class ReloadableResourceBundleMessageSource extends AbstractResourceBased
 			propHolder.refreshLock.lock();
 		}
 		try {
+			// 直接从缓存中取PropertiesHolder，并查看是否过期，过期则重新加载
 			PropertiesHolder existingHolder = this.cachedProperties.get(filename);
+			//默认没有定义两者均为-2 所以直接执行刷新操作refreshProperties
 			if (existingHolder != null && existingHolder.getRefreshTimestamp() > originalTimestamp) {
 				return existingHolder;
 			}
+			//刷新资源，该方法会将资源文件加载到propHolder
 			return refreshProperties(filename, propHolder);
 		}
 		finally {
@@ -408,12 +419,12 @@ public class ReloadableResourceBundleMessageSource extends AbstractResourceBased
 	 */
 	protected PropertiesHolder refreshProperties(String filename, @Nullable PropertiesHolder propHolder) {
 		long refreshTimestamp = (getCacheMillis() < 0 ? -1 : System.currentTimeMillis());
-
+		// properties和xml文件均能加载，this.resourceLoader.getResource加载核心类，没有配置使用的为spring默认的DefaultResourceLoader
 		Resource resource = this.resourceLoader.getResource(filename + PROPERTIES_SUFFIX);
 		if (!resource.exists()) {
 			resource = this.resourceLoader.getResource(filename + XML_SUFFIX);
 		}
-
+		// 如果资源文件存在，添加时间戳
 		if (resource.exists()) {
 			long fileTimestamp = -1;
 			if (getCacheMillis() >= 0) {
@@ -437,6 +448,7 @@ public class ReloadableResourceBundleMessageSource extends AbstractResourceBased
 				}
 			}
 			try {
+				//根据resource, filename生成Properties属性 创建PropertiesHolder对象（Properties就是java  中常用的配置方式，存有我们的国际化数据）
 				Properties props = loadProperties(resource, filename);
 				propHolder = new PropertiesHolder(props, fileTimestamp);
 			}
