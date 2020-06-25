@@ -1,0 +1,16 @@
+description = "Spring Framework Demo"
+dependencies {
+//    compile(project(":spring-instrument"))
+//    compile(project(":spring-jdbc"))
+//    compile(project(":spring-tx"))
+//    compile(project(":spring-aspects"))
+    compile(project(":spring-context"))
+//    compile group: 'org.mybatis' ,name: 'mybatis', version: '3.5.3'
+//    compile group: 'org.mybatis' ,name: 'mybatis-spring', version: '2.0.3'
+    compile group: 'com.github.pagehelper', name: 'pagehelper', version: '4.1.0'
+    compile group: 'javax.validation',name: 'validation-api',version: '2.0.1.Final'
+//    complie group: 'org.hibernate.validator',name: 'hibernate-validator',version: '6.1.0.Final'
+    compile("org.hibernate:hibernate-validator:6.1.0.Final")
+    compile("org.apache.tomcat.embed:tomcat-embed-el:9.0.22")
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+}
