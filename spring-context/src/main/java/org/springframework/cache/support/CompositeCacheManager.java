@@ -30,6 +30,24 @@ import org.springframework.cache.CacheManager;
 import org.springframework.lang.Nullable;
 
 /**
+ * 设计模式:
+ * 	组合模式: 缓存组合管理器
+ *
+ *
+ * 	使用案例: https://blog.csdn.net/jiachunchun/article/details/90235418
+ * 		<bean id="cacheManager"
+ *       	class="org.springframework.cache.support.CompositeCacheManager">
+ *     		<!--注入多个CacheManager-->
+ *     		<property name="cacheManagers">
+ *        		<list>
+ *             		<ref bean="ehcacheManager"/>
+ *             		<ref bean="jcacheManager"/>
+ *         		</list>
+ *     		</property>
+ *     		<property name="fallbackToNoOpCache" value="true"/>
+ * 		</bean>
+ *
+ *
  * Composite {@link CacheManager} implementation that iterates over
  * a given collection of delegate {@link CacheManager} instances.
  *

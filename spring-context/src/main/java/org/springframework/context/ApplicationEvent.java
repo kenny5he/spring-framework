@@ -19,6 +19,8 @@ package org.springframework.context;
 import java.util.EventObject;
 
 /**
+ * Spring事件: 使用观察者模式进行扩展，基于Java标准事件EventObject进行扩展。
+ *
  * Class to be extended by all application events. Abstract as it
  * doesn't make sense for generic events to be published directly.
  *

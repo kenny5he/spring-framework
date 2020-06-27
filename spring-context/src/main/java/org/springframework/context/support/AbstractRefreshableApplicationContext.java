@@ -128,6 +128,7 @@ public abstract class AbstractRefreshableApplicationContext extends AbstractAppl
 			beanFactory.setSerializationId(getId());
 			customizeBeanFactory(beanFactory);
 			loadBeanDefinitions(beanFactory);
+			// 5.2.2-RELEASE版本有加锁，用于在非主流程时刷新动作，保证线程安全
 			this.beanFactory = beanFactory;
 		}
 		catch (IOException ex) {

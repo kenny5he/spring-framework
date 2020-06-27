@@ -26,6 +26,9 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
+ * Accessor: 存取器
+ * 主要用作存取Jdbc连接
+ *
  * Base class for {@link org.springframework.jdbc.core.JdbcTemplate} and
  * other JDBC-accessing DAO helpers, defining common properties such as
  * DataSource and exception translator.

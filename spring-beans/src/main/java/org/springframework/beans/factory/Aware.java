@@ -17,6 +17,13 @@
 package org.springframework.beans.factory;
 
 /**
+ * Aware: 英文翻译为感知、意识
+ * 其主要代表子类为: ApplicationContextAware
+ * 其所有子类均以 xxxxAware命名，xxxx为需要感知的类，必定存在 setxxxx方法
+ * 每当一个类实现其接口时，会回调对象让其进行使用。
+ *
+ * 例: 子类接口{@link BeanNameAware}，可以让该Bean感知到自身的BeanName（对应Spring容器的BeanId属性）属性
+ *
  * A marker superinterface indicating that a bean is eligible to be notified by the
  * Spring container of a particular framework object through a callback-style method.
  * The actual method signature is determined by individual subinterfaces but should

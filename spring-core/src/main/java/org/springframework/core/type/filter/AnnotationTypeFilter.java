@@ -26,6 +26,9 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 
 /**
+ * 注解类型过滤器
+ *
+ * 
  * A simple {@link TypeFilter} which matches classes with a given annotation,
  * checking inherited annotations as well.
  *

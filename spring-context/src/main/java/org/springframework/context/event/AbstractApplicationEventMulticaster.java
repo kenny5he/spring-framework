@@ -41,6 +41,9 @@ import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
 
 /**
+ * ApplicationContext 会使用ApplicationEventMulticaster 事件广播器作为实际发布事件的委托
+ *
+ *
  * Abstract implementation of the {@link ApplicationEventMulticaster} interface,
  * providing the basic listener registration facility.
  *

@@ -382,6 +382,10 @@ public abstract class AbstractEnvironment implements ConfigurableEnvironment {
 		return this.propertySources;
 	}
 
+	/**
+	 * 启动参数中 JVM system properties property
+	 * @return 系统属性配置值
+	 */
 	@Override
 	@SuppressWarnings({"rawtypes", "unchecked"})
 	public Map<String, Object> getSystemProperties() {
@@ -408,6 +412,11 @@ public abstract class AbstractEnvironment implements ConfigurableEnvironment {
 		}
 	}
 
+	/**
+	 * Linux 中env 环境全局参数配置值
+	 * 操作: Linux 或 Unix系统中命令行键入 env所示值
+	 * @return Linux系统环境配置参数值Map
+	 */
 	@Override
 	@SuppressWarnings({"rawtypes", "unchecked"})
 	public Map<String, Object> getSystemEnvironment() {

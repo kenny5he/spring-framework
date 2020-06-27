@@ -72,6 +72,8 @@ import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
 /**
+ * 用于处理注解@PersistenceUnit和@PersistenceContext，处理JPA
+ *
  * BeanPostProcessor that processes {@link javax.persistence.PersistenceUnit}
  * and {@link javax.persistence.PersistenceContext} annotations, for injection of
  * the corresponding JPA resources {@link javax.persistence.EntityManagerFactory}

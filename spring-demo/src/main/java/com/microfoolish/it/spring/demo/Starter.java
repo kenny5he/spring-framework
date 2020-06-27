@@ -2,12 +2,15 @@ package com.microfoolish.it.spring.demo;
 
 import com.microfoolish.it.spring.demo.config.AppConfig;
 import com.microfoolish.it.spring.demo.pojo.vo.RoleVO;
+import com.microfoolish.it.spring.demo.pojo.vo.UserVO;
 import com.microfoolish.it.spring.demo.service.IRoleService;
 import com.microfoolish.it.spring.demo.service.impl.RoleService;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+import org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.support.GenericBeanDefinition;
+import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import javax.validation.ConstraintViolation;
@@ -45,6 +48,10 @@ public class Starter {
 		ac.register(AppConfig.class);
 
 		//Spring 默认支持循环引用(单例模式，并且以set方式注入) 关闭循环引用
+		/**
+		 * {@link AbstractAutowireCapableBeanFactory#doCreateBean(String, RootBeanDefinition, Object[])}
+		 *
+		 */
 		//DefaultListableBeanFactory defaultListableBeanFactory = ac.getDefaultListableBeanFactory();
 		//defaultListableBeanFactory.setAllowCircularReferences(false);
 		/**
@@ -68,5 +75,6 @@ public class Starter {
 		roleService.getRoleVO(roleVO);
 		System.out.println(roleService);
 		System.out.println(ac.getBeanDefinition("roleService").getClass().getSimpleName());
+
 	}
 }

@@ -66,6 +66,13 @@ import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
 /**
+ * 用于解析 {@link Configuration}注解
+ *
+ * 场景1: 启动时: 由 {@link AnnotationConfigUtils#registerAnnotationConfigProcessors }进行添加触发
+ * 并且前提调剂为未注册过其它 Bean解析器的前提下。
+ *
+ * 场景2:
+ *
  * {@link BeanFactoryPostProcessor} used for bootstrapping processing of
  * {@link Configuration @Configuration} classes.
  *
